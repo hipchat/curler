@@ -1,3 +1,4 @@
 dropin.cache
 *.pid
+*.log
 *.pyc
