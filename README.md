@@ -1,4 +1,3 @@
-
 curler
 =======
 
@@ -16,8 +15,8 @@ Let's say we have a photo sharing site written in PHP which lets users export al
 
  * We have a `generate_archive` method in a `jobs` controller available at `http://localhost/jobs/generate_archive`
  * We're running a Gearman server and curler worker on localhost:
-  * `gearman -vv`
-  * `twistd -n curler --curl-paths=http://localhost/jobs --job-queue=curl`
+   * `gearman -vv`
+   * `twistd -n curler --curl-paths=http://localhost/jobs --job-queue=curl`
 
 **Flow**
 
