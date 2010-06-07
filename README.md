@@ -16,7 +16,7 @@ Let's say we have a photo sharing site written in PHP which lets users export al
  * We have a `generate_archive` method in a `jobs` controller available at `http://localhost/jobs/generate_archive`
  * We're running a Gearman server and curler worker on localhost:
    * `gearman -vv`
-   * `twistd -n curler --curl-paths=http://localhost/jobs --job-queue=curl`
+   * `twistd --nodaemon curler --curl-paths=http://localhost/jobs --job-queue=curl`
 
 **Flow**
 
@@ -34,13 +34,14 @@ Let's say we have a photo sharing site written in PHP which lets users export al
 
 1. In the `generate_archive` method of our `jobs` controller we'll grab `$_POST['user_id']`, generate the archive, and send the user an email with a download link.
 
-Usage
--------
-curler runs as a [twistd](http://linux.die.net/man/1/twistd) service. Just go to the /curler directory and run:
+Installation & Usage
+--------------------
+curler runs as a [twistd](http://linux.die.net/man/1/twistd) service. To install & run:
 
-    $ twistd curler
-    $ tail -f twistd.log
-    $ kill `cat twistd.pid`
+    $ git clone http://github.com/powdahound/curler.git
+    $ cd curler/
+    $ sudo python setup.py install
+    $ twistd --nodaemon curler
 
 There are a few arguments to curler:
 
@@ -59,7 +60,6 @@ Dependencies
 TODO
 ----
  * Test script
- * Install script
  * Use urllib instead of pycurl so dependency can be removed
  * Multiple requests in parallel
  * Use [twisted-gears](http://github.com/dustin/twisted-gears) instead of [python-gearman](http://github.com/samuel/python-gearman)
