@@ -51,10 +51,10 @@ There are a few arguments to curler:
 
 Dependencies
 -------------
+ * Python 2.6+
  * [Twisted](http://twistedmatrix.com/trac/)
  * [python-gearman](http://github.com/samuel/python-gearman)
  * [pycurl](http://pycurl.sourceforge.net/)
- * [simplejson](http://code.google.com/p/simplejson/)
 
 TODO
 ----

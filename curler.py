@@ -1,7 +1,6 @@
-import logging
 import pycurl
 import random
-import simplejson
+import json
 import StringIO
 import urllib
 from gearman.worker import GearmanWorker
@@ -43,7 +42,7 @@ class CurlerService(Service):
 
         # make sure job arg is valid json
         try:
-            job_data = simplejson.loads(job.arg)
+            job_data = json.loads(job.arg)
         except ValueError, e:
             log.msg('ERROR: Job data not valid JSON: %r' % e)
             return False
@@ -96,7 +95,7 @@ class CurlerService(Service):
 
             reply = {'code': code,
                      'response': response}
-            return simplejson.dumps(reply)
+            return json.dumps(reply, sort_keys=True, indent=2)
         except pycurl.error, e:
             log.msg('ERROR: cURL failed: %r - %r' % (e[0], e[1]))
             return False
