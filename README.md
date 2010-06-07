@@ -44,17 +44,9 @@ curler runs as a [twistd](http://linux.die.net/man/1/twistd) service. Just go to
 
 There are a few arguments to curler:
 
- * `--curl-paths`
-
- Base URLs for cURLing which the `method` is appended to. You can specify multiple URLs by separating them with commas. One will be chosen at random (defaults to 'http://localhost').
-
- * `--job-queue`
-
- The Gearman job queue to monitor (defaults to 'curl').
-
- * `--job-servers`
-
- Gearman job servers to get jobs from. Separate multiple with commas (defaults to 'localhost:4730', gearmand's default).
+ * `--curl-paths` - Base URLs for cURLing which the `method` is appended to. You can specify multiple URLs by separating them with commas. One will be chosen at random (defaults to 'http://localhost').
+ * `--job-queue` - The Gearman job queue to monitor (defaults to 'curl').
+ * `--job-servers` - Gearman job servers to get jobs from. Separate multiple with commas (defaults to 'localhost:4730', gearmand's default).
 
 Dependencies
 -------------
