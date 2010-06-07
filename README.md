@@ -60,9 +60,14 @@ Dependencies
 -------------
  * [Twisted](http://twistedmatrix.com/trac/)
  * [python-gearman](http://github.com/samuel/python-gearman)
+ * [pycurl](http://pycurl.sourceforge.net/)
+ * [simplejson](http://code.google.com/p/simplejson/)
 
 TODO
 ----
+ * Test script
+ * Install script
+ * Use urllib instead of pycurl so dependency can be removed
  * Multiple requests in parallel
  * Use [twisted-gears](http://github.com/dustin/twisted-gears) instead of [python-gearman](http://github.com/samuel/python-gearman)
  * Handle failures
