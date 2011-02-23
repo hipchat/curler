@@ -54,13 +54,10 @@ Dependencies
 -------------
  * Python 2.6+
  * [Twisted](http://twistedmatrix.com/trac/)
- * [python-gearman 2x](http://pypi.python.org/pypi/gearman/)
 
 TODO
 ----
- * Multiple requests in parallel
- * Use [twisted-gears](http://github.com/dustin/twisted-gears) instead of [python-gearman](http://github.com/samuel/python-gearman)
- * Handle job failures
+ * Wait for in-progress jobs when restarting
  * Automatically reconnect to gearman server
 
 [gm]: http://gearman.org

@@ -18,7 +18,8 @@ class TestHandler(BaseHTTPRequestHandler):
 
         # special behaviors
         if self.path == '/sleep':
-            time.sleep(1)
+            data = json.loads(form['data'].value)
+            time.sleep(int(data['secs']))
         elif self.path == '/fail':
             content = 'FAIL'
             code = 500
