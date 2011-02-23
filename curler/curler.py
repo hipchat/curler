@@ -1,9 +1,11 @@
+import json
 import pycurl
 import random
-import json
 import StringIO
+import traceback
 import urllib
 from gearman.worker import GearmanWorker
+from time import time
 from twisted.application.service import Service
 from twisted.internet import reactor
 from twisted.python import log
@@ -23,7 +25,7 @@ class CurlerService(Service):
                 % (self.job_servers, self.job_queue, self.curl_paths))
         self.log_verbose('Verbose logging is enabled.')
         worker = GearmanWorker(self.job_servers)
-        worker.register_function(self.job_queue, self.do_curl)
+        worker.register_task(self.job_queue, self.handle_job)
         try:
             worker.work()
         except KeyboardInterrupt, SystemExit:
@@ -37,48 +39,63 @@ class CurlerService(Service):
         Service.stopService(self)
         log.msg('Service stopping')
 
-    def do_curl(self, job):
-        self.log_verbose('Got job: handle=%s, arg=%r' % (job.handle, job.arg))
+    def handle_job(self, worker, job):
+        time_start = time()
+        try:
+            log.msg('Got job: %s' % job.handle)
+            self.log_verbose('worker=%r, job=%r' % (worker, job))
+            response = self._do_curl(worker, job)
+        except Exception, e:
+            log.msg('ERROR: Unhandled exception: %r' % e)
+            # Log full traceback on multiple lines
+            for line in traceback.format_exc().split('\n'):
+                log.msg(line)
+            response = {"error": "Internal curler error. Check the logs."}
 
+        # always include handle in response
+        response['job_handle'] = job.handle
+
+        # log error if we're returning one
+        if 'error' in response:
+            log.msg('ERROR: %s' % response['error'])
+            response['job_data'] = job.data
+
+        response_json = json.dumps(response, sort_keys=True, indent=2)
+
+        time_taken = int((time() - time_start) * 1000 + 0.5)
+        log.msg('Completed job: %s, time=%sms'
+                % (job.handle, time_taken))
+        return response_json
+
+    def log_verbose(self, message):
+        if self.verbose:
+            log.msg("VERBOSE: %s" % message)
+
+    def _do_curl(self, worker, job):
         # make sure job arg is valid json
         try:
-            job_data = json.loads(job.arg)
+            job_data = json.loads(job.data, encoding='UTF-8')
         except ValueError, e:
-            log.msg('ERROR: Job data not valid JSON: %r' % e)
-            return False
+            return {"error": "Job data is not valid JSON"}
 
         # make sure it contains a method
         if 'method' not in job_data:
-            log.msg("ERROR: Missing 'method' in job data: %r" % job_data)
-            return False
+            return {"error": "Missing \"method\" property in job data"}
 
         # make sure it contains data
         if 'data' not in job_data:
-            log.msg("ERROR: Missing 'data' in job data: %r" % job_data)
-            return False
+            return {"error": "Missing \"data\" property in job data"}
 
-        method = job_data['method']
-        data = job_data['data']
-
-        for key, value in data.items():
-            # encode any unicode as utf-8 before urlencoding
-            if isinstance(value, unicode):
-                data[key] = value.encode('utf-8')
-            # convert True/False (true/false in json) to 1/0
-            if isinstance(value, bool):
-                data[key] = int(value)
-            # convert None (null in json) to empty string
-            if value is None:
-                data[key] = ''
+        data = json.dumps(job_data['data'])
 
         # perform the curl
         path = random.choice(self.curl_paths)
-        url = "%s/%s" % (path, method)
+        url = "%s/%s" % (path, job_data['method'])
         self.log_verbose('cURLing: url=%s, data=%r' % (url, data))
         b = StringIO.StringIO()
         c = pycurl.Curl()
         c.setopt(c.URL, str(url))
-        c.setopt(c.POSTFIELDS, urllib.urlencode(data))
+        c.setopt(c.POSTFIELDS, urllib.urlencode({"data": data}))
         c.setopt(pycurl.FOLLOWLOCATION, 1)
         c.setopt(pycurl.WRITEFUNCTION, b.write)
         try:
@@ -88,18 +105,9 @@ class CurlerService(Service):
             response = b.getvalue()
             c.close()
 
-            # check response code for success
-            log.msg('Job complete: code=%d, url=%s, time=%0.2fs'
-                    % (code, url, time))
-            self.log_verbose('response=%r' % response)
+            self.log_verbose('cURL complete: code=%d, time=%0.2fs, response=%r'
+                             % (code, time, response))
 
-            reply = {'code': code,
-                     'response': response}
-            return json.dumps(reply, sort_keys=True, indent=2)
+            return {'response_code': code, 'response': response}
         except pycurl.error, e:
-            log.msg('ERROR: cURL failed: %r - %r' % (e[0], e[1]))
-            return False
-
-    def log_verbose(self, message):
-        if self.verbose:
-            log.msg("VERBOSE: %s" % message)
+            return {"error": "cURL failed: %r - %r" % (e[0], e[1])}

@@ -32,7 +32,7 @@ Let's say we have a photo sharing site written in PHP which lets users export al
 
 1. curler will pick up the job and hit `http://localhost/jobs/generate_archive` with the POST data `user_id=5`.
 
-1. In the `generate_archive` method of our `jobs` controller we'll grab `$_POST['user_id']`, generate the archive, and send the user an email with a download link.
+1. In the `generate_archive` method of our `jobs` controller we'll grab the job data from `$_POST['data']`, generate the archive, and send the user an email with a download link.
 
 Installation & Usage
 --------------------

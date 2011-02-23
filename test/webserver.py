@@ -1,5 +1,6 @@
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import cgi
+import json
 import sys
 import time
 
@@ -17,8 +18,7 @@ class TestHandler(BaseHTTPRequestHandler):
 
         # special behaviors
         if self.path == '/sleep':
-            seconds = int(form.getvalue('seconds'))
-            time.sleep(seconds)
+            time.sleep(1)
         elif self.path == '/fail':
             content = 'FAIL'
             code = 500
@@ -27,7 +27,7 @@ class TestHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/plain')
         self.end_headers()
         self.wfile.write(content)
-        self.wfile.write("\nPOST keys: %r" % form.keys())
+        self.wfile.write("\nPOST data: %r" % form['data'].value)
         return
 
 

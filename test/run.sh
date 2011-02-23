@@ -6,7 +6,7 @@
 
 GEARMAND_PORT=4731
 GEARMAN_QUEUE=curler_test
-WEBSERVER_PORT=8085
+WEBSERVER_PORT=8047
 
 # start gearmand
 echo "Running gearmand on port $GEARMAND_PORT"
@@ -28,26 +28,22 @@ twistd -n curler \
 CURLER_PID=$!
 
 # let services fully start
-sleep 3
+sleep 1
 
 echo "Running jobs..."
-echo "Should get 200 - OK"
+echo -e "\n********** Should get 200 - OK **********"
 gearman \
   -p $GEARMAND_PORT \
   -f $GEARMAN_QUEUE '{"method": "success", "data": {}}'
 
-echo -e "\nShould get 500 - FAIL"
+echo -e "\n\n********** Should get 500 - FAIL **********"
 gearman \
   -p $GEARMAND_PORT \
   -f $GEARMAN_QUEUE '{"method": "fail", "data": {}}'
-
-echo -e "\nShould get 200 - OK after 1s sleep"
-gearman \
-  -p $GEARMAND_PORT \
-  -f $GEARMAN_QUEUE '{"method": "sleep", "data": {"seconds": 1}}'
 
 # kill services
 echo -e "\n"
 kill $CURLER_PID
 kill $WEBSERVER_PID
 kill $GEARMAND_PID
+

@@ -11,7 +11,7 @@ class Options(usage.Options):
         ["verbose", "v", "Verbose logging"]]
 
     optParameters = [
-        ["curl-paths", "c", "http://localhost",
+        ["curl-paths", "c", None,
             "Base path to curl. Separate with commas."],
         ["job-queue", "q", "curl",
             "Job queue to get jobs from."],
