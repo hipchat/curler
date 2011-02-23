@@ -17,18 +17,19 @@ def refresh_plugin_cache():
     from twisted.plugin import IPlugin, getPlugins
     list(getPlugins(IPlugin))
 
-setup(name='curler',
-      version='1.0',
-      description='Gearman worker which cURLs to do work.',
-      author='Garret Heaton',
-      author_email='powdahound@gmail.com',
-      url='http://github.com/powdahound/curler',
-      packages=[
-          'curler',
-          'twisted.plugins'],
-      package_data={
-          'twisted': ['plugins/curler_plugin.py']
-      }
-    )
+if __name__ == "__main__":
+    setup(name='curler',
+        version='1.0',
+        description='Gearman worker which cURLs to do work.',
+        author='Garret Heaton',
+        author_email='powdahound@gmail.com',
+        url='http://github.com/powdahound/curler',
+        packages=[
+            'curler',
+            'twisted.plugins'],
+        package_data={
+            'twisted': ['plugins/curler_plugin.py']
+        }
+        )
 
-refresh_plugin_cache()
+    refresh_plugin_cache()
