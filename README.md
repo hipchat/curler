@@ -54,16 +54,14 @@ Dependencies
 -------------
  * Python 2.6+
  * [Twisted](http://twistedmatrix.com/trac/)
- * [python-gearman](http://github.com/samuel/python-gearman)
- * [pycurl](http://pycurl.sourceforge.net/)
+ * [python-gearman 2x](http://pypi.python.org/pypi/gearman/)
 
 TODO
 ----
- * Test script
- * Use urllib instead of pycurl so dependency can be removed
  * Multiple requests in parallel
  * Use [twisted-gears](http://github.com/dustin/twisted-gears) instead of [python-gearman](http://github.com/samuel/python-gearman)
- * Handle failures
- 
+ * Handle job failures
+ * Automatically reconnect to gearman server
+
 [gm]: http://gearman.org
 [gm-why]: http://highscalability.com/product-gearman-open-source-message-queuing-system

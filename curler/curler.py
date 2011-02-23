@@ -1,9 +1,8 @@
 import json
-import pycurl
 import random
-import StringIO
 import traceback
 import urllib
+import urllib2
 from gearman.worker import GearmanWorker
 from time import time
 from twisted.application.service import Service
@@ -86,28 +85,22 @@ class CurlerService(Service):
         if 'data' not in job_data:
             return {"error": "Missing \"data\" property in job data"}
 
+        # we'll post the data as JSON, so convert it back
         data = json.dumps(job_data['data'])
 
-        # perform the curl
+        # select random curl path to hit
         path = random.choice(self.curl_paths)
         url = "%s/%s" % (path, job_data['method'])
-        self.log_verbose('cURLing: url=%s, data=%r' % (url, data))
-        b = StringIO.StringIO()
-        c = pycurl.Curl()
-        c.setopt(c.URL, str(url))
-        c.setopt(c.POSTFIELDS, urllib.urlencode({"data": data}))
-        c.setopt(pycurl.FOLLOWLOCATION, 1)
-        c.setopt(pycurl.WRITEFUNCTION, b.write)
+
         try:
-            c.perform()
-            code = int(c.getinfo(pycurl.HTTP_CODE))
-            time = int(c.getinfo(pycurl.TOTAL_TIME))
-            response = b.getvalue()
-            c.close()
-
-            self.log_verbose('cURL complete: code=%d, time=%0.2fs, response=%r'
-                             % (code, time, response))
-
+            # oh no, we're not actually using curl :)
+            self.log_verbose('POSTing to %s, data=%r' % (url, data))
+            post_data = urllib.urlencode({"data": data})
+            r = urllib2.urlopen(url, post_data)
+            code = r.getcode()
+            response = r.read()
+            self.log_verbose('urlopen complete: code=%d, response=%r'
+                             % (code, response))
             return {'response_code': code, 'response': response}
-        except pycurl.error, e:
-            return {"error": "cURL failed: %r - %r" % (e[0], e[1])}
+        except Exception, e:
+            return {"error": "urlopen failed: %r" % e}
