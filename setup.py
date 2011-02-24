@@ -7,7 +7,7 @@ import sys
 try:
     import twisted
 except ImportError:
-    raise SystemExit("wisted not found. Make sure you "
+    raise SystemExit("Twisted not found. Make sure you "
                      "have installed the Twisted core package.")
 
 from distutils.core import setup

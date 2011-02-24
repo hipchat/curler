@@ -13,7 +13,7 @@ class Options(usage.Options):
     optParameters = [
         ["curl-paths", "c", None,
             "Base path to curl. Separate with commas."],
-        ["job-queue", "q", "curl",
+        ["job-queue", "q", "curler",
             "Job queue to get jobs from."],
         ["job-server", "j", "localhost:4730",
           "Gearman job server."],
