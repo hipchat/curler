@@ -24,6 +24,10 @@ class CurlerService(Service):
         self.num_workers = num_workers
         self.verbose = verbose
 
+        self.stopping = False
+        self.worker = None
+        self.coiterate_deferreds = []
+
     def startService(self):
         Service.startService(self)
         log.msg('Service starting. servers=%r, queue=%s, curl paths=%r'
@@ -37,17 +41,33 @@ class CurlerService(Service):
 
     def start_work(self, proto):
         log.msg('Connected to Gearman: %r' % proto)
-        worker = client.GearmanWorker(proto)
-        worker.registerFunction(self.job_queue, self.handle_job)
+        self.worker = client.GearmanWorker(proto)
+        self.worker.registerFunction(self.job_queue, self.handle_job)
+
+        def worker_done(result, i):
+            log.msg('Worker %s done - %r' % (i, result))
+
+        def keep_going():
+            log.msg('keep_going: %r' % (not self.stopping))
+            return not self.stopping
 
         log.msg('Firing up %d workers...' % self.num_workers)
         coop = task.Cooperator()
         for i in range(self.num_workers):
-            reactor.callLater(0.1 * i, lambda: coop.coiterate(worker.doJobs()))
+            d = coop.coiterate(self.worker.doJobs(keep_going))
+            d.addCallback(worker_done, i)
+            self.coiterate_deferreds.append(d)
+        log.msg(self.coiterate_deferreds)
 
+    # @defer.inlineCallbacks
     def stopService(self):
         Service.stopService(self)
-        log.msg('Service stopping')
+        self.stopping = True
+        log.msg('Service stopping - %r' % self.worker.sleeping)
+        # FIXME: If we wait on coiterate_deferreds here it will wait until each
+        # worker has handled 1 more job (or finishes its current one).
+        # yield defer.DeferredList(self.coiterate_deferreds)
+        log.msg('All done!')
 
     @defer.inlineCallbacks
     def handle_job(self, job):

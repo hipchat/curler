@@ -57,7 +57,7 @@ Dependencies
 
 TODO
 ----
- * Wait for in-progress jobs when restarting
+ * Wait for in-progress jobs when stopping
  * Automatically reconnect to gearman server
 
 [gm]: http://gearman.org
