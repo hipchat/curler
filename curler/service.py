@@ -24,6 +24,7 @@ class CurlerService(Service):
         self.num_workers = num_workers
         self.verbose = verbose
 
+    @defer.inlineCallbacks
     def startService(self):
         Service.startService(self)
         log.msg('Service starting. servers=%r, queue=%s, curl paths=%r'
@@ -32,8 +33,12 @@ class CurlerService(Service):
 
         host, port = self.job_server.split(':')
         c = protocol.ClientCreator(reactor, client.GearmanProtocol)
-        d = c.connectTCP(host, int(port))
-        d.addCallback(self.start_work)
+        try:
+            proto = yield c.connectTCP(host, int(port))
+            self.start_work(proto)
+        except Exception, e:
+            log.msg("ERROR: Unable to connect & start workers: %s" % e)
+            reactor.stop()
 
     def start_work(self, proto):
         log.msg('Connected to Gearman: %r' % proto)
