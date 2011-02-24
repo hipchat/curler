@@ -17,7 +17,7 @@ curler runs as a [twistd](http://linux.die.net/man/1/twistd) service. To install
     $ git clone http://github.com/powdahound/curler.git
     $ cd curler/
     $ sudo python setup.py install
-    $ twistd --nodaemon curler --base-url=http://localhost/jobs
+    $ twistd --nodaemon curler --base-urls=http://localhost/jobs
 
 There are a few arguments to curler:
 
