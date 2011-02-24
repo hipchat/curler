@@ -15,8 +15,10 @@ class Options(usage.Options):
             "Base path to curl. Separate with commas."],
         ["job-queue", "q", "curl",
             "Job queue to get jobs from."],
-        ["job-servers", "j", "localhost:4730",
-          "Gearman job servers. Separate with commas."]]
+        ["job-server", "j", "localhost:4730",
+          "Gearman job server."],
+        ["num-workers", "n", 5,
+          "Number of workers (max parallel jobs)."]]
 
     longdesc = 'curler is a Gearman worker service which does work by curling \
         a web service. \nPlease see http://github.com/powdahound/curler to \
@@ -30,16 +32,18 @@ class CurlerServiceMaker(object):
     options = Options
 
     def makeService(self, options):
-        if not options['curl-paths'] or not options['job-servers'] \
-            or not options['job-queue']:
+        if not options['curl-paths'] or not options['job-server'] \
+            or not options['job-queue'] or not options['num-workers']:
             print options
             sys.exit(1)
 
         curl_paths = options['curl-paths'].split(',')
-        job_servers = options['job-servers'].split(',')
+        job_server = options['job-server']
         job_queue = options['job-queue']
+        num_workers = int(options['num-workers'])
         verbose = bool(options['verbose'])
-        return CurlerService(curl_paths, job_servers, job_queue, verbose)
+        return CurlerService(curl_paths, job_server, job_queue, num_workers,
+                             verbose)
 
 
 serviceMaker = CurlerServiceMaker()

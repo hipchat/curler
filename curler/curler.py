@@ -16,19 +16,21 @@ HTTPClientFactory.noisy = False
 
 class CurlerService(Service):
 
-    def __init__(self, curl_paths, job_servers, job_queue, verbose=False):
+    def __init__(self, curl_paths, job_server, job_queue, num_workers,
+                 verbose=False):
         self.curl_paths = curl_paths
-        self.job_servers = job_servers
+        self.job_server = job_server
         self.job_queue = job_queue
+        self.num_workers = num_workers
         self.verbose = verbose
 
     def startService(self):
         Service.startService(self)
         log.msg('Service starting. servers=%r, queue=%s, curl paths=%r'
-                % (self.job_servers, self.job_queue, self.curl_paths))
+                % (self.job_server, self.job_queue, self.curl_paths))
         self.log_verbose('Verbose logging is enabled.')
 
-        host, port = self.job_servers[0].split(':')
+        host, port = self.job_server.split(':')
         c = protocol.ClientCreator(reactor, client.GearmanProtocol)
         d = c.connectTCP(host, int(port))
         d.addCallback(self.start_work)
@@ -38,8 +40,9 @@ class CurlerService(Service):
         worker = client.GearmanWorker(proto)
         worker.registerFunction(self.job_queue, self.handle_job)
 
+        log.msg('Firing up %d workers...' % self.num_workers)
         coop = task.Cooperator()
-        for i in range(5):
+        for i in range(self.num_workers):
             reactor.callLater(0.1 * i, lambda: coop.coiterate(worker.doJobs()))
 
     def stopService(self):
