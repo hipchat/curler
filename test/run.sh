@@ -22,9 +22,9 @@ WEBSERVER_PID=$!
 echo "Running curler"
 cd ..
 twistd -n curler \
-  --curl-paths=http://localhost:$WEBSERVER_PORT \
+  --base-urls=http://localhost:$WEBSERVER_PORT \
   --job-queue=$GEARMAN_QUEUE \
-  --job-servers=localhost:$GEARMAND_PORT &
+  --gearmand-server=localhost:$GEARMAND_PORT &
 CURLER_PID=$!
 
 # let services fully start

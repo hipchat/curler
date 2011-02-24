@@ -17,13 +17,13 @@ curler runs as a [twistd](http://linux.die.net/man/1/twistd) service. To install
     $ git clone http://github.com/powdahound/curler.git
     $ cd curler/
     $ sudo python setup.py install
-    $ twistd --nodaemon curler --curl-paths=http://localhost/jobs
+    $ twistd --nodaemon curler --base-url=http://localhost/jobs
 
 There are a few arguments to curler:
 
- * `--curl-paths` - Base URLs for cURLing which the `method` is appended to. You can specify multiple URLs by separating them with commas. One will be chosen at random.
+ * `--base-urls` - Base URLs which the `method` property is appended to. You can specify multiple URLs by separating them with commas and one will be chosen at random.
  * `--job-queue` - The Gearman job queue to monitor (defaults to 'curler').
- * `--job-server` - Gearman job servers to get jobs from (defaults to 'localhost:4730').
+ * `--gearmand-server` - Gearman job servers to get jobs from (defaults to 'localhost:4730').
  * `--num-workers` - Number of workers to run (# of jobs you can process in parallel). Uses nonblocking Twisted APIs instead of spawning extra processes or threads. Defaults to 5.
  * `--verbose` - Enables verbose logging (includes full request/response data).
 

@@ -16,10 +16,10 @@ HTTPClientFactory.noisy = False
 
 class CurlerService(Service):
 
-    def __init__(self, curl_paths, job_server, job_queue, num_workers,
+    def __init__(self, base_urls, gearmand_server, job_queue, num_workers,
                  verbose=False):
-        self.curl_paths = curl_paths
-        self.job_server = job_server
+        self.base_urls = base_urls
+        self.gearmand_server = gearmand_server
         self.job_queue = job_queue
         self.num_workers = num_workers
         self.verbose = verbose
@@ -28,10 +28,10 @@ class CurlerService(Service):
     def startService(self):
         Service.startService(self)
         log.msg('Service starting. servers=%r, queue=%s, curl paths=%r'
-                % (self.job_server, self.job_queue, self.curl_paths))
+                % (self.gearmand_server, self.job_queue, self.base_urls))
         self.log_verbose('Verbose logging is enabled.')
 
-        host, port = self.job_server.split(':')
+        host, port = self.gearmand_server.split(':')
         c = protocol.ClientCreator(reactor, client.GearmanProtocol)
         try:
             proto = yield c.connectTCP(host, int(port))
@@ -110,7 +110,7 @@ class CurlerService(Service):
         data = json.dumps(job_data['data'])
 
         # select random curl path to hit
-        path = random.choice(self.curl_paths)
+        path = random.choice(self.base_urls)
         url = str("%s/%s" % (path, job_data['method']))
 
         try:
