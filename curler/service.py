@@ -27,7 +27,7 @@ class CurlerService(Service):
     @defer.inlineCallbacks
     def startService(self):
         Service.startService(self)
-        log.msg('Service starting. servers=%r, queue=%s, curl paths=%r'
+        log.msg('Service starting. gearmand=%r, job queue=%s, base urls=%r'
                 % (self.gearmand_server, self.job_queue, self.base_urls))
         self.log_verbose('Verbose logging is enabled.')
 
@@ -109,7 +109,7 @@ class CurlerService(Service):
         # we'll post the data as JSON, so convert it back
         data = json.dumps(job_data['data'])
 
-        # select random curl path to hit
+        # select random base URL to hit
         path = random.choice(self.base_urls)
         url = str("%s/%s" % (path, job_data['method']))
 

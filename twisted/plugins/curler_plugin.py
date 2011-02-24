@@ -12,7 +12,7 @@ class Options(usage.Options):
 
     optParameters = [
         ["base-urls", "u", None,
-            "Base paths to curl. Separate with commas."],
+            "Base paths to web services. Separate with commas."],
         ["job-queue", "q", "curler",
             "Job queue to get jobs from."],
         ["gearmand-server", "g", "localhost:4730",
@@ -28,7 +28,7 @@ class Options(usage.Options):
 class CurlerServiceMaker(object):
     implements(IServiceMaker, IPlugin)
     tapname = "curler"
-    description = "A Gearman worker that cURLs to do work."
+    description = "A Gearman worker that hits a web service to do work."
     options = Options
 
     def makeService(self, options):
