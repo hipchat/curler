@@ -1,5 +1,5 @@
 import sys
-from curler.curler import CurlerService
+from curler.service import CurlerService
 from twisted.application.service import IServiceMaker
 from twisted.plugin import IPlugin
 from twisted.python import usage

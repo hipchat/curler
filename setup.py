@@ -26,6 +26,7 @@ if __name__ == "__main__":
         url='http://github.com/powdahound/curler',
         packages=[
             'curler',
+            'curler.twisted_gears',
             'twisted.plugins'],
         package_data={
             'twisted': ['plugins/curler_plugin.py']
