@@ -55,7 +55,7 @@ class CurlerService(Service):
         try:
             log.msg('Got job: %s' % job.handle)
             self.log_verbose('data=%r' % job.data)
-            response = yield self._do_curl(job.handle, job.data)
+            response = yield self._make_request(job.handle, job.data)
         except Exception, e:
             log.msg('ERROR: Unhandled exception: %r' % e)
             # Log full traceback on multiple lines
@@ -84,7 +84,7 @@ class CurlerService(Service):
             log.msg("VERBOSE: %s" % message)
 
     @defer.inlineCallbacks
-    def _do_curl(self, handle, data):
+    def _make_request(self, handle, data):
         # make sure job arg is valid json
         try:
             job_data = json.loads(data, encoding='UTF-8')
