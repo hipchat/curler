@@ -80,8 +80,9 @@ class CurlerService(Service):
         response_json = json.dumps(response, sort_keys=True, indent=2)
 
         time_taken = int((time() - time_start) * 1000 + 0.5)
-        log.msg('Completed job: %s, time=%sms, status=%d'
-                % (job.handle, time_taken, response.get('status')))
+        log.msg('Completed job: %s, method=%s, time=%sms, status=%d'
+                % (job.handle, response['url'], time_taken,
+                   response.get('status')))
         defer.returnValue(response_json)
 
     def log_verbose(self, message):
@@ -127,6 +128,8 @@ class CurlerService(Service):
                 response = e.response
             self.log_verbose('POST complete: status=%d, response=%r'
                              % (status, response))
-            defer.returnValue({'status': status, 'response': response})
+            defer.returnValue({'url': url,
+                               'status': status,
+                               'response': response})
         except Exception, e:
             defer.returnValue({"error": "POST failed: %r - %s" % (e, e)})
