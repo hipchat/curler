@@ -12,11 +12,11 @@ class Options(usage.Options):
 
     optParameters = [
         ["base-urls", "u", None,
-            "Base paths to web services. Separate with commas."],
+            "Base paths to web services. Separate multiple with commas."],
         ["job-queue", "q", "curler",
             "Job queue to get jobs from."],
         ["gearmand-server", "g", "localhost:4730",
-          "Gearman job server."],
+          "Gearman job servers. Separate multiple with commas."],
         ["num-workers", "n", 5,
           "Number of workers (max parallel jobs)."]]
 
@@ -38,12 +38,12 @@ class CurlerServiceMaker(object):
             sys.exit(1)
 
         base_urls = options['base-urls'].split(',')
-        gearmand_server = options['gearmand-server']
+        gearmand_servers = options['gearmand-server'].split(',')
         job_queue = options['job-queue']
         num_workers = int(options['num-workers'])
         verbose = bool(options['verbose'])
-        return CurlerService(base_urls, gearmand_server, job_queue, num_workers,
-                             verbose)
+        return CurlerService(base_urls, gearmand_servers, job_queue,
+                             num_workers, verbose)
 
 
 serviceMaker = CurlerServiceMaker()

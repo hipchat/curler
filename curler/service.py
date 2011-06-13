@@ -16,10 +16,10 @@ HTTPClientFactory.noisy = False
 
 class CurlerService(Service):
 
-    def __init__(self, base_urls, gearmand_server, job_queue, num_workers,
+    def __init__(self, base_urls, gearmand_servers, job_queue, num_workers,
                  verbose=False):
         self.base_urls = base_urls
-        self.gearmand_server = gearmand_server
+        self.gearmand_servers = gearmand_servers
         self.job_queue = job_queue
         self.num_workers = num_workers
         self.verbose = verbose
@@ -27,21 +27,23 @@ class CurlerService(Service):
     @defer.inlineCallbacks
     def startService(self):
         Service.startService(self)
-        log.msg('Service starting. gearmand=%r, job queue=%s, base urls=%r'
-                % (self.gearmand_server, self.job_queue, self.base_urls))
+        log.msg('Service starting. servers=%r, job queue=%s, base urls=%r'
+                % (self.gearmand_servers, self.job_queue, self.base_urls))
         self.log_verbose('Verbose logging is enabled.')
 
-        host, port = self.gearmand_server.split(':')
-        c = protocol.ClientCreator(reactor, client.GearmanProtocol)
-        try:
-            proto = yield c.connectTCP(host, int(port))
-            self.start_work(proto)
-        except Exception, e:
-            log.msg("ERROR: Unable to connect & start workers: %s" % e)
-            reactor.stop()
+        for server in self.gearmand_servers:
+            host, port = server.split(':')
+            c = protocol.ClientCreator(reactor, client.GearmanProtocol)
+            try:
+                proto = yield c.connectTCP(host, int(port))
+                self.start_work(proto, server)
+            except Exception, e:
+                log.msg("ERROR: Unable to connect & start workers for %s: %s"
+                        % (server, e))
+                reactor.stop()
 
-    def start_work(self, proto):
-        log.msg('Connected to Gearman: %r' % proto)
+    def start_work(self, proto, server):
+        log.msg('Connected to Gearman at %s' % server)
         worker = client.GearmanWorker(proto)
         worker.registerFunction(self.job_queue, self.handle_job)
 

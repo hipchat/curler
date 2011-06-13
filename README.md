@@ -23,8 +23,8 @@ There are a few arguments to curler:
 
  * `--base-urls` - Base URLs which the `method` property is appended to. You can specify multiple URLs by separating them with commas and one will be chosen at random.
  * `--job-queue` - The Gearman job queue to monitor (defaults to 'curler').
- * `--gearmand-server` - Gearman job servers to get jobs from (defaults to 'localhost:4730').
- * `--num-workers` - Number of workers to run (# of jobs you can process in parallel). Uses nonblocking Twisted APIs instead of spawning extra processes or threads. Defaults to 5.
+ * `--gearmand-server` - Gearman job servers to get jobs from (defaults to 'localhost:4730'). Separate multiple with commas.
+ * `--num-workers` - Number of workers to run per server (# of jobs you can process in parallel). Uses nonblocking Twisted APIs instead of spawning extra processes or threads. Defaults to 5.
  * `--verbose` - Enables verbose logging (includes full request/response data).
 
 Run `twistd --help` to see how to run as a daemon.
