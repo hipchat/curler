@@ -31,16 +31,21 @@ class CurlerService(Service):
                 % (self.gearmand_servers, self.job_queue, self.base_urls))
         self.log_verbose('Verbose logging is enabled.')
 
+        num_connected = 0
         for server in self.gearmand_servers:
             host, port = server.split(':')
             c = protocol.ClientCreator(reactor, client.GearmanProtocol)
             try:
                 proto = yield c.connectTCP(host, int(port))
                 self.start_work(proto, server)
+                num_connected += 1
             except Exception, e:
                 log.msg("ERROR: Unable to connect & start workers for %s: %s"
                         % (server, e))
-                reactor.stop()
+
+        if num_connected == 0:
+            log.msg("ERROR: Couldn't connect to any gearmand servers")
+            reactor.stop()
 
     def start_work(self, proto, server):
         log.msg('Connected to Gearman at %s' % server)
