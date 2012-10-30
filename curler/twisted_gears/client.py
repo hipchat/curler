@@ -22,10 +22,12 @@ class GearmanProtocol(stateful.StatefulProtocol):
                     WORK_DATA, WORK_WARNING, WORK_EXCEPTION ]
 
     def makeConnection(self, transport):
-        stateful.StatefulProtocol.makeConnection(self, transport)
         self.receivingCommand = 0
         self.deferreds = deque()
         self.unsolicited_handlers = set()
+        # curler: moved this to the end so that vars are initialized when
+        # connectionMade() gets called
+        stateful.StatefulProtocol.makeConnection(self, transport)
 
     def send_raw(self, cmd, data=''):
         """Send a command with the given data with no response."""

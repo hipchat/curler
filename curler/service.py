@@ -14,42 +14,31 @@ from twisted.web.error import Error
 HTTPClientFactory.noisy = False
 
 
-class CurlerService(Service):
+# By default, verbose logging is disabled. This function is redefined
+# when the service starts if verbose logging is enabled.
+log.verbose = lambda x: None
 
-    def __init__(self, base_urls, gearmand_servers, job_queue, num_workers,
-                 verbose=False):
+
+class CurlerClient(client.GearmanProtocol):
+
+    def __init__(self, service, server, base_urls, job_queue, num_workers):
+        self.service = service
+        self.server = server
         self.base_urls = base_urls
-        self.gearmand_servers = gearmand_servers
         self.job_queue = job_queue
         self.num_workers = num_workers
-        self.verbose = verbose
 
-    @defer.inlineCallbacks
-    def startService(self):
-        Service.startService(self)
-        log.msg('Service starting. servers=%r, job queue=%s, base urls=%r'
-                % (self.gearmand_servers, self.job_queue, self.base_urls))
-        self.log_verbose('Verbose logging is enabled.')
+    def connectionLost(self, reason):
+        log.msg('CurlerClient lost connection to %s: %s'
+                % (self.server, reason))
+        client.GearmanProtocol.connectionLost(self, reason)
 
-        num_connected = 0
-        for server in self.gearmand_servers:
-            host, port = server.split(':')
-            c = protocol.ClientCreator(reactor, client.GearmanProtocol)
-            try:
-                proto = yield c.connectTCP(host, int(port))
-                self.start_work(proto, server)
-                num_connected += 1
-            except Exception, e:
-                log.msg("ERROR: Unable to connect & start workers for %s: %s"
-                        % (server, e))
+    def connectionMade(self):
+        log.msg('CurlerClient made connection to %s' % self.server)
+        self.start_work()
 
-        if num_connected == 0:
-            log.msg("ERROR: Couldn't connect to any gearmand servers")
-            reactor.stop()
-
-    def start_work(self, proto, server):
-        log.msg('Connected to Gearman at %s' % server)
-        worker = client.GearmanWorker(proto)
+    def start_work(self):
+        worker = client.GearmanWorker(self)
         worker.registerFunction(self.job_queue, self.handle_job)
 
         log.msg('Firing up %d workers...' % self.num_workers)
@@ -57,16 +46,12 @@ class CurlerService(Service):
         for i in range(self.num_workers):
             reactor.callLater(0.1 * i, lambda: coop.coiterate(worker.doJobs()))
 
-    def stopService(self):
-        Service.stopService(self)
-        log.msg('Service stopping')
-
     @defer.inlineCallbacks
     def handle_job(self, job):
         time_start = time()
         try:
             log.msg('Got job: %s' % job.handle)
-            self.log_verbose('data=%r' % job.data)
+            log.verbose('data=%r' % job.data)
             response = yield self._make_request(job.handle, job.data)
         except Exception, e:
             log.msg('ERROR: Unhandled exception: %r' % e)
@@ -91,10 +76,6 @@ class CurlerService(Service):
                 % (job.handle, response['url'], time_taken,
                    response.get('status')))
         defer.returnValue(response_json)
-
-    def log_verbose(self, message):
-        if self.verbose:
-            log.msg("VERBOSE: %s" % message)
 
     @defer.inlineCallbacks
     def _make_request(self, handle, data):
@@ -122,7 +103,7 @@ class CurlerService(Service):
         url = str("%s/%s" % (path, job_data['method']))
 
         try:
-            self.log_verbose('POSTing to %s, data=%r' % (url, data))
+            log.verbose('POSTing to %s, data=%r' % (url, data))
             postdata = urllib.urlencode({"data": data})
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             try:
@@ -133,10 +114,64 @@ class CurlerService(Service):
             except Error, e:
                 status = int(e.status)
                 response = e.response
-            self.log_verbose('POST complete: status=%d, response=%r'
+            log.verbose('POST complete: status=%d, response=%r'
                              % (status, response))
             defer.returnValue({'url': url,
                                'status': status,
                                'response': response})
         except Exception, e:
             defer.returnValue({"error": "POST failed: %r - %s" % (e, e)})
+
+
+class CurlerClientFactory(protocol.ReconnectingClientFactory):
+    noisy = True
+    protocol = CurlerClient
+
+    # retry every 5 seconds for up to 10 minutes
+    initialDelay = 5
+    maxDelay = 5
+    maxRetries = 120
+
+    def __init__(self, service, server, base_urls, job_queue, num_workers):
+        self.service = service
+        self.server = server
+        self.base_urls = base_urls
+        self.job_queue = job_queue
+        self.num_workers = num_workers
+
+    def buildProtocol(self, addr):
+        p = self.protocol(self.service, self.server, self.base_urls,
+                          self.job_queue, self.num_workers)
+        p.factory = self
+        return p
+
+
+class CurlerService(Service):
+
+    def __init__(self, base_urls, gearmand_servers, job_queue, num_workers,
+                 verbose=False):
+        self.base_urls = base_urls
+        self.gearmand_servers = gearmand_servers
+        self.job_queue = job_queue
+        self.num_workers = num_workers
+
+        # define verbose logging function
+        if verbose:
+            log.verbose = lambda x: log.msg('VERBOSE: %s' % x)
+
+    @defer.inlineCallbacks
+    def startService(self):
+        Service.startService(self)
+        log.msg('Service starting. servers=%r, job queue=%s, base urls=%r'
+                % (self.gearmand_servers, self.job_queue, self.base_urls))
+        log.verbose('Verbose logging is enabled')
+
+        for server in self.gearmand_servers:
+            host, port = server.split(':')
+            f = CurlerClientFactory(self, server, self.base_urls,
+                                    self.job_queue, self.num_workers)
+            proto = yield reactor.connectTCP(host, int(port), f)
+
+    def stopService(self):
+        Service.stopService(self)
+        log.msg('Service stopping')
