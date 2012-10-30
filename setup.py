@@ -19,7 +19,7 @@ def refresh_plugin_cache():
 
 if __name__ == "__main__":
     setup(name='curler',
-          version='1.0',
+          version='1.1',
           description='Gearman worker that hits a web service to do work.',
           author='Garret Heaton',
           author_email='powdahound@gmail.com',
