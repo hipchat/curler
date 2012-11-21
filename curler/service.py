@@ -104,7 +104,9 @@ class CurlerClient(client.GearmanProtocol):
 
         try:
             log.verbose('POSTing to %s, data=%r' % (url, data))
-            postdata = urllib.urlencode({"data": data})
+            postdata = urllib.urlencode({
+                "job_handle": handle,
+                "data": data})
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
             try:
                 # despite our name, we're not actually using curl :)
