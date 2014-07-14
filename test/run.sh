@@ -8,6 +8,17 @@ GEARMAND_PORT=4731
 GEARMAN_QUEUE=curler_test
 WEBSERVER_PORT=8047
 
+function clean_up {
+  # kill services
+  echo -e "\n"
+  kill $CURLER_PID
+  kill $WEBSERVER_PID
+  kill $GEARMAND_PID
+  exit
+}
+
+trap clean_up SIGHUP SIGINT SIGTERM SIGKILL
+
 # start gearmand
 echo "Running gearmand on port $GEARMAND_PORT"
 gearmand --port $GEARMAND_PORT &
@@ -34,16 +45,11 @@ echo "Running jobs..."
 echo -e "\n********** Should get 200 - OK **********"
 gearman \
   -p $GEARMAND_PORT \
-  -f $GEARMAN_QUEUE '{"method": "success", "data": {}}'
+  -f $GEARMAN_QUEUE '{"method": "success", "data": {}, "headers": {"X-TEST-HEADER": "(yey)"}}'
 
 echo -e "\n\n********** Should get 500 - FAIL **********"
 gearman \
   -p $GEARMAND_PORT \
   -f $GEARMAN_QUEUE '{"method": "fail", "data": {}}'
 
-# kill services
-echo -e "\n"
-kill $CURLER_PID
-kill $WEBSERVER_PID
-kill $GEARMAND_PID
-
+clean_up

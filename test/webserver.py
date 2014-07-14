@@ -24,6 +24,9 @@ class TestHandler(BaseHTTPRequestHandler):
             content = 'FAIL'
             code = 500
 
+        # print out the headers so we can verify custom headers are sent
+        print self.headers
+
         self.send_response(code)
         self.send_header('Content-type', 'text/plain')
         self.end_headers()

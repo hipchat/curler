@@ -213,7 +213,7 @@ class GearmanWorkerTest(ProtocolTestCase):
         return defer.DeferredList([sd, d])
 
     def test_finishJob(self):
-        self.gw.functions['blah'] = lambda x: x.upper()
+        self.gw.functions['blah'] = lambda x: x.data.upper()
         job = client._GearmanJob("test\0blah\0junk")
         d = self.gw._finishJob(job)
 
@@ -245,7 +245,7 @@ class GearmanWorkerTest(ProtocolTestCase):
         d.addCallback(_checkReceived)
 
     def test_doJob(self):
-        self.gw.functions['blah'] = lambda x: x.upper()
+        self.gw.functions['blah'] = lambda x: x.data.upper()
         d = self.gw.doJob()
         self.write_response(constants.JOB_ASSIGN,
                             "footdle\0blah\0args and stuff")
@@ -259,7 +259,7 @@ class GearmanWorkerTest(ProtocolTestCase):
         return d
 
     def test_doJobs(self):
-        self.gw.functions['blah'] = lambda x: x.upper()
+        self.gw.functions['blah'] = lambda x: x.data.upper()
         d = self.gw.doJobs().next()
         self.write_response(constants.JOB_ASSIGN,
                             "footdle\0blah\0args and stuff")
