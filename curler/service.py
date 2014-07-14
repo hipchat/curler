@@ -95,6 +95,8 @@ class CurlerClient(client.GearmanProtocol):
             defer.returnValue({"error":
                                "Missing \"data\" property in job data"})
 
+        headers = self.build_headers(job_data)
+
         # we'll post the data as JSON, so convert it back
         data = json.dumps(job_data['data'])
 
@@ -107,7 +109,7 @@ class CurlerClient(client.GearmanProtocol):
             postdata = urllib.urlencode({
                 "job_handle": handle,
                 "data": data})
-            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+
             try:
                 # despite our name, we're not actually using curl :)
                 response = yield getPage(url, method='POST', postdata=postdata,
@@ -123,6 +125,21 @@ class CurlerClient(client.GearmanProtocol):
                                'response': response})
         except Exception, e:
             defer.returnValue({"error": "POST failed: %r - %s" % (e, e)})
+
+    @staticmethod
+    def build_headers(job_data):
+        # default headers - can be overridden by job_data['headers']
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        if 'headers' in job_data:
+            # headers can't be unicode but json.loads makes all the string unicode
+            for key, value in job_data['headers'].iteritems():
+                if isinstance(key, unicode):
+                    key = key.encode('utf-8')
+                if isinstance(value, unicode):
+                    value = value.encode('utf-8')
+                headers[key] = value
+
+        return headers
 
 
 class CurlerClientFactory(protocol.ReconnectingClientFactory):

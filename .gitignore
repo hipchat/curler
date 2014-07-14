@@ -5,3 +5,6 @@ dropin.cache
 MANIFEST
 dist/
 build/
+*.iml
+*.ipr
+_trial_temp/
